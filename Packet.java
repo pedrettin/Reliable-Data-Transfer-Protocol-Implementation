@@ -61,7 +61,7 @@ public class Packet {
 	 *  allowing it to be used as the actual buffer contents.
 	 */
 	public String toString() {
-		if (type == 0)
+		if (type == DATA_TYPE)
 			return "data[" + seqNum + "] " + payload;
 		else
 			return "ack[" + seqNum + "]";
