@@ -6,20 +6,25 @@ import java.nio.*;
 /** Class for working with studio3 packets. */
 public class Packet {
 	// packet fields - note: all are public
-	public byte type;		// packet type
-	public short seqNum;		// sequence number in [0,2^15)
-	public String payload;		// application payload
-	public static final byte DATA_TYPE = 0;
-	public static final byte ACK_TYPE = 1;
-	
+	public byte					type;				// packet type
+	public short				seqNum;			// sequence number in
+													// [0,2^15)
+	public String				payload;			// application payload
+	public static final byte	DATA_TYPE	= 0;
+	public static final byte	ACK_TYPE	= 1;
+
 	/** Constructor, initializes fields to default values. */
-	public Packet() { clear(); }
+	public Packet() {
+		clear();
+	}
 
 	/** Initialize all packet fields.
 	 *  Initializes all fields to an undefined value.
- 	 */
+	 */
 	public void clear() {
-		type = 0; seqNum = 0; payload = "";
+		type = 0;
+		seqNum = 0;
+		payload = "";
 	}
 
 	/** Pack attributes defining packet fields into buffer.
@@ -30,12 +35,17 @@ public class Packet {
 	 */
 	public byte[] pack() {
 		byte[] pbuf;
-		try { pbuf = payload.getBytes("US-ASCII");
-		} catch(Exception e) { return null; }
-		if (pbuf.length > 1400 - 3) return null;
+		try {
+			pbuf = payload.getBytes("US-ASCII");
+		} catch (Exception e) {
+			return null;
+		}
+		if (pbuf.length > 1400 - 3)
+			return null;
 		ByteBuffer bbuf = ByteBuffer.allocate(3 + pbuf.length);
 		bbuf.order(ByteOrder.BIG_ENDIAN);
-		bbuf.put(type); bbuf.putShort(seqNum);
+		bbuf.put(type);
+		bbuf.putShort(seqNum);
 		bbuf.put(pbuf);
 		return bbuf.array();
 	}
@@ -46,12 +56,17 @@ public class Packet {
 	 *  @param bufLen is the number of valid bytes in buf
 	 */
 	public boolean unpack(byte[] buf, int bufLen) {
-		if (bufLen < 3) return false;
+		if (bufLen < 3)
+			return false;
 		ByteBuffer bbuf = ByteBuffer.wrap(buf);
 		bbuf.order(ByteOrder.BIG_ENDIAN);
-		type = bbuf.get(); seqNum = bbuf.getShort();
-		try { payload = new String(buf,3,bufLen-3,"US-ASCII");
-		} catch(Exception e) { return false; }
+		type = bbuf.get();
+		seqNum = bbuf.getShort();
+		try {
+			payload = new String(buf, 3, bufLen - 3, "US-ASCII");
+		} catch (Exception e) {
+			return false;
+		}
 		return true;
 	}
 
