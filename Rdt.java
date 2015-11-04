@@ -31,7 +31,11 @@ public class Rdt implements Runnable {
 	// queues for communicating with source/sink
 	private ArrayBlockingQueue<String> fromSrc;
 	private ArrayBlockingQueue<String> toSnk;
-
+	private Packet[] sendBuffer;
+	private long[] resendTimes;
+	private LinkedList<Packet> resendList;
+	private Packet[] receiveBuffer;
+	
 	private Thread myThread; // local thread for this object
 	private boolean quit;	 // used to signal quitting time
 
