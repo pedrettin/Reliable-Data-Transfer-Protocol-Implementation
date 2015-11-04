@@ -31,6 +31,7 @@ public class Rdt implements Runnable {
 	// queues for communicating with source/sink
 	private ArrayBlockingQueue<String> fromSrc;
 	private ArrayBlockingQueue<String> toSnk;
+	
 	private Packet[] sendBuffer;
 	private long[] resendTimes;
 	private LinkedList<Packet> resendList;
@@ -55,6 +56,11 @@ public class Rdt implements Runnable {
 		fromSrc = new ArrayBlockingQueue<String>(1000,true);
 		toSnk = new ArrayBlockingQueue<String>(1000,true);
 		quit = false;
+		
+		sendBuffer = new Packet[2*wSize];
+		resendTimes = new long[2*wSize];
+		resendList = new LinkedList<Packet>();
+		receiveBuffer = new Packet[wSize];
 	}
 
 	/** Start the Rdt running. */
@@ -103,7 +109,6 @@ public class Rdt implements Runnable {
 			// TODO
 			// if receive buffer has a packet that can be
 			//    delivered, deliver it to sink
-
 			// else if the substrate has an incoming packet
 			//      get the packet from the substrate and process it
 			// 	if it's a data packet, ack it and add it
