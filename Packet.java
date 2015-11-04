@@ -9,7 +9,9 @@ public class Packet {
 	public byte type;		// packet type
 	public short seqNum;		// sequence number in [0,2^15)
 	public String payload;		// application payload
-
+	public static final byte DATA_TYPE = 0;
+	public static final byte ACK_TYPE = 1;
+	
 	/** Constructor, initializes fields to default values. */
 	public Packet() { clear(); }
 
