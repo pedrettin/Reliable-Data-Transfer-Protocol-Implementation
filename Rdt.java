@@ -110,7 +110,6 @@ public class Rdt implements Runnable {
 			// TODO
 			// if receive buffer has a packet that can be
 			//    delivered, deliver it to sink
-			
 			// else if the substrate has an incoming packet
 			//      get the packet from the substrate and process it
 			// 	if it's a data packet, ack it and add it
