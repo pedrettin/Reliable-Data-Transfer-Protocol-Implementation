@@ -1,3 +1,8 @@
+/**
+ * Authors: Carlos Gonzalez, Nicola Pedretti
+ *
+ */
+
 /** Reliable Data Transport class.
  *
  *  This class implements a reliable data transport service.
@@ -11,6 +16,7 @@
  *  a type flag that identifies a packet as a data packet or an
  *  acknowledgment. The sequence numbers are 15 bits.
  */
+
 
 import java.io.*;
 import java.net.*;
