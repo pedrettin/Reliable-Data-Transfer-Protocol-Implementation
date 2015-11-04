@@ -31,6 +31,8 @@ public class Rdt implements Runnable {
 	// queues for communicating with source/sink
 	private ArrayBlockingQueue<String> fromSrc;
 	private ArrayBlockingQueue<String> toSnk;
+        
+        // Initializing the 4 class instances that correspond to the 4 main data structures.
 	private Packet[] sendBuffer;
 	private long[] resendTimes;
 	private LinkedList<Packet> resendList;
