@@ -42,8 +42,8 @@ public class Rdt implements Runnable {
 	private String[]					receiveBuffer;
 
 	// variables to keep track of sending and receiving buffer statuses
-	private int							nextPacketToAck;
-	private int							nextExpectedPacket;
+	private short							nextSequenceNumber;
+	private short							nextExpectedPacket;
 
 	private Thread						myThread;			// local thread for
 															// this
@@ -76,7 +76,7 @@ public class Rdt implements Runnable {
 
 		// initialize variables to keep track of sending and receiving buffer
 		// statuses
-		nextPacketToAck = 0;
+		nextSequenceNumber = 0;
 		nextExpectedPacket = 0;
 
 	}
@@ -127,23 +127,12 @@ public class Rdt implements Runnable {
 		long t0 = System.nanoTime();
 		long now = 0; // current time (relative to t0)
 
-		while (!quit /* we still have un-acked packets */) {
+		while (!quit || (numUnAckedPackets() > 0)) {
 			now = System.nanoTime() - t0;
 			uploadOrderedPackets();
 			processIncomingPacket();
 			resendTimeOutPackets(now);
-			
-
-			// else if there is a message from the source waiting
-			// to be sent and the send window is not full
-			// and the substrate can accept a packet
-			// create a packet containing the message,
-			// and send it, after updating the send buffer
-			// and related data
-			if (ready()) {
-
-			}
-
+			sendReadyPacket();
 			// else nothing to do, so sleep for 1 ms
 
 		}
@@ -153,7 +142,7 @@ public class Rdt implements Runnable {
 	 * If receive buffer has a packet that can be delivered, deliver it to sink
 	 */
 	private void uploadOrderedPackets() {
-		int index = nextExpectedPacket;
+		short index = nextExpectedPacket;
 		while (receiveBuffer[index] != null) {
 			toSnk.add(receiveBuffer[index]);
 			receiveBuffer[index] = null;
@@ -166,7 +155,8 @@ public class Rdt implements Runnable {
 	 * If the substrate has an incoming packet get the packet from the substrate and process it
 	 */
 	private void processIncomingPacket() {
-		if (!sub.incoming()) return;
+		if (!sub.incoming())
+			return;
 		Packet rcvdPacket = sub.receive();
 		// if it's a data packet, ack it and add it
 		// to receive buffer as appropriate
@@ -184,18 +174,51 @@ public class Rdt implements Runnable {
 			sendBuffer[rcvdPacket.seqNum] = null;
 		}
 	}
-	
+
 	/**
 	 * If the resend timer has expired, re-send the oldest un-acked packet and reset timer
+	 * @param long currentTime time when new while loop is started
 	 */
-	private void resendTimeOutPackets(long currentTime){
+	private void resendTimeOutPackets(long currentTime) {
 		short seqNum = resendList.peek();
 		long oldSendTime = resendTimes[seqNum];
 		long timePassed = currentTime - oldSendTime;
-		if(timePassed > timeout){
+		if (timePassed > timeout) {
 			sub.send(sendBuffer[resendList.pop()]);
 			resendTimes[seqNum] = currentTime;
 		}
+	}
+
+	/**
+	 * if there is a message from the source waiting to be sent and the send window 
+	 * is not full and the substrate can accept a packet create a packet containing the message, 
+	 * and send it, after updating the send buffer and related data
+	 */
+	private void sendReadyPacket() {
+		if(!ready()) return;
+		if(numUnAckedPackets()<wSize){
+			if(sub.ready()){
+				String message = fromSrc.poll();
+				Packet out = new Packet();
+				out.payload = message;
+				out.seqNum = nextSequenceNumber;
+				out.type = Packet.DATA_TYPE;
+				sub.send(out);
+			}
+		}
+		
+	}
+	
+	/**
+	 * count how many unacked packets we have
+	 * @return int number of unacked packets
+	 */
+	private int numUnAckedPackets(){
+		int numUnAckedPackets = 0;
+		for(Packet p: sendBuffer){
+			if(p!=null)numUnAckedPackets++;
+		}
+		return numUnAckedPackets;
 	}
 
 	/** Send a message to peer.
