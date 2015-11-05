@@ -38,6 +38,11 @@ public class Rdt implements Runnable {
 	private long[]						resendTimes;
 	private LinkedList<Packet>			resendList;
 	private String[]					receiveBuffer;
+	
+	// variables to keep track of sending and receiving buffer statuses
+	private int nextPacketToAck;
+	private int nextExpectedPacket;
+	
 
 	private Thread						myThread;		// local thread for this
 														// object
@@ -60,11 +65,17 @@ public class Rdt implements Runnable {
 		fromSrc = new ArrayBlockingQueue<String>(1000, true);
 		toSnk = new ArrayBlockingQueue<String>(1000, true);
 		quit = false;
-
+		
+		//initialize data structures to handle ack, send, receive packets
 		sendBuffer = new Packet[2 * wSize];
 		resendTimes = new long[2 * wSize];
 		resendList = new LinkedList<Packet>();
 		receiveBuffer = new String[wSize];
+		
+		//initialize variables to keep track of sending and receiving buffer statuses
+		nextPacketToAck = 0;
+		nextExpectedPacket =0;
+		
 	}
 
 	/** Start the Rdt running. */
@@ -117,6 +128,7 @@ public class Rdt implements Runnable {
 			now = System.nanoTime() - t0;
 			// if receive buffer has a packet that can be
 		    // delivered, deliver it to sink
+			
 			if(true){
 				//do nothing
 			}
@@ -131,7 +143,8 @@ public class Rdt implements Runnable {
 					ack.seqNum = rcvdPacket.seqNum;
 					ack.type = Packet.ACK_TYPE;
 					sub.send(ack);
-					receiveBuffer[rcvdPacket.seqNum] = rcvdPacket.payload;
+					receiveBuffer[rcvdPacket.seqNum%wSize] = rcvdPacket.payload;
+					uploadOrderedPackets();
 				}
 				// if it's an ack, update the send buffer and
 				// related data as appropriate
@@ -141,22 +154,35 @@ public class Rdt implements Runnable {
 				}
 			}
 			// TODO
-			
-			
-
 			// else if the resend timer has expired, re-send the
 			//      oldest un-acked packet and reset timer
-
+			
 			// else if there is a message from the source waiting
 			//      to be sent and the send window is not full
 			//	and the substrate can accept a packet
 			//      create a packet containing the message,
 			//	and send it, after updating the send buffer
 			//	and related data
+			if(ready()){
+				
+			}
 
 			// else nothing to do, so sleep for 1 ms
 
 		}
+	}
+	
+	/**
+	 * Adds all ordered packets to the toSnk Buffer.
+	 */
+	private void uploadOrderedPackets(){
+		int index = nextExpectedPacket;
+		while(receiveBuffer[index]!=null){
+			toSnk.add(receiveBuffer[index]);
+			receiveBuffer[index]=null;
+			index++;
+		}
+		nextExpectedPacket = index;
 	}
 
 	/** Send a message to peer.
