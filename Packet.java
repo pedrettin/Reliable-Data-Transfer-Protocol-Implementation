@@ -11,7 +11,10 @@ public class Packet {
 													// [0,2^15)
 	public String				payload;			// application payload
 	public static final byte	DATA_TYPE	= 0;
+<<<<<<< HEAD:src/Packet.java
+=======
 	public static final byte	ACK_TYPE	= 1;
+>>>>>>> c0de8a01b1e41161fd13369b51eba03042ad34ae:Packet.java
 
 	/** Constructor, initializes fields to default values. */
 	public Packet() {
