@@ -42,8 +42,8 @@ public class Rdt implements Runnable {
 	private String[]					receiveBuffer;
 
 	// variables to keep track of sending and receiving buffer statuses
-	private short							nextSequenceNumber;
-	private short							nextExpectedPacket;
+	private short						nextSequenceNumber;
+	private short						nextExpectedPacket;
 
 	private Thread						myThread;			// local thread for
 															// this
@@ -129,11 +129,27 @@ public class Rdt implements Runnable {
 
 		while (!quit || (numUnAckedPackets() > 0)) {
 			now = System.nanoTime() - t0;
-			uploadOrderedPackets();
-			processIncomingPacket();
-			resendTimeOutPackets(now);
-			sendReadyPacket();
-			// else nothing to do, so sleep for 1 ms
+			short seqNum = resendList.peek();
+			long oldSendTime = resendTimes[seqNum];
+			long timePassed = now - oldSendTime;
+			if (receiveBuffer[nextExpectedPacket] != null)
+				uploadOrderedPackets();
+			else if (sub.incoming())
+				processIncomingPacket();
+			// If the resend timer has expired, re-send the oldest un-acked
+			// packet and reset timer
+			else if (timePassed > timeout) {
+				sub.send(sendBuffer[resendList.pop()]);
+				resendTimes[seqNum] = now;
+			} else if (ready())
+				sendReadyPacket();
+			else
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					System.err.println("Rdt:run: " + "sleep exception " + e);
+					System.exit(1);
+				}
 
 		}
 	}
@@ -155,8 +171,6 @@ public class Rdt implements Runnable {
 	 * If the substrate has an incoming packet get the packet from the substrate and process it
 	 */
 	private void processIncomingPacket() {
-		if (!sub.incoming())
-			return;
 		Packet rcvdPacket = sub.receive();
 		// if it's a data packet, ack it and add it
 		// to receive buffer as appropriate
@@ -176,28 +190,13 @@ public class Rdt implements Runnable {
 	}
 
 	/**
-	 * If the resend timer has expired, re-send the oldest un-acked packet and reset timer
-	 * @param long currentTime time when new while loop is started
-	 */
-	private void resendTimeOutPackets(long currentTime) {
-		short seqNum = resendList.peek();
-		long oldSendTime = resendTimes[seqNum];
-		long timePassed = currentTime - oldSendTime;
-		if (timePassed > timeout) {
-			sub.send(sendBuffer[resendList.pop()]);
-			resendTimes[seqNum] = currentTime;
-		}
-	}
-
-	/**
 	 * if there is a message from the source waiting to be sent and the send window 
 	 * is not full and the substrate can accept a packet create a packet containing the message, 
 	 * and send it, after updating the send buffer and related data
 	 */
 	private void sendReadyPacket() {
-		if(!ready()) return;
-		if(numUnAckedPackets()<wSize){
-			if(sub.ready()){
+		if (numUnAckedPackets() < wSize) {
+			if (sub.ready()) {
 				String message = fromSrc.poll();
 				Packet out = new Packet();
 				out.payload = message;
@@ -206,17 +205,18 @@ public class Rdt implements Runnable {
 				sub.send(out);
 			}
 		}
-		
+
 	}
-	
+
 	/**
 	 * count how many unacked packets we have
 	 * @return int number of unacked packets
 	 */
-	private int numUnAckedPackets(){
+	private int numUnAckedPackets() {
 		int numUnAckedPackets = 0;
-		for(Packet p: sendBuffer){
-			if(p!=null)numUnAckedPackets++;
+		for (Packet p : sendBuffer) {
+			if (p != null)
+				numUnAckedPackets++;
 		}
 		return numUnAckedPackets;
 	}
