@@ -23,15 +23,15 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class SrcSnk implements Runnable {
-	private Thread myThread;	// thread that executes run() method
+	private Thread	myThread;			// thread that executes run() method
 
-	private long delta;		// time between packets in ns
-	private long runLength;		// amount of time to run in ns
-	private Rdt rdt;		// reference to Rdt object
+	private long	delta;				// time between packets in ns
+	private long	runLength;			// amount of time to run in ns
+	private Rdt		rdt;				// reference to Rdt object
 
-	private int inCount = 0;	// count of received packets
-	private int outCount = 0;	// count of sent packets
-	private boolean quit;		// stop thread when true
+	private int		inCount		= 0;	// count of received packets
+	private int		outCount	= 0;	// count of sent packets
+	private boolean	quit;				// stop thread when true
 
 	/** Initialize a new SrcSnk object
 	 *  @param delta is a float, representing the amount of time to wait
@@ -43,19 +43,25 @@ public class SrcSnk implements Runnable {
 	SrcSnk(double delta, double runLength, Rdt rdt) {
 		this.delta = (long) (delta * 1000000000); // convert to ns
 		this.runLength = (long) (runLength * 1000000000);
-		this.rdt = rdt; this.quit = false;
+		this.rdt = rdt;
+		this.quit = false;
 	}
 
 	/** Instantiate and start a thread to execute run(). */
 	public void start() {
-		myThread = new Thread(this); myThread.start();
+		myThread = new Thread(this);
+		myThread.start();
 	}
 
 	/** Signal run method to halt. */
-	public void stop() { quit = true; }
+	public void stop() {
+		quit = true;
+	}
 
 	/** wait for thread to terminate. */
-	public void join() throws Exception { myThread.join(); }
+	public void join() throws Exception {
+		myThread.join();
+	}
 
 	/** Run the SrcSnk thread.
 	 *  This method executes a loop that generates new outgoing
@@ -70,48 +76,48 @@ public class SrcSnk implements Runnable {
 		long stopTime = next + runLength;
 
 		int sleeptime; // time to sleep when nothing to do
-		if (delta > 0 && delta < 1000000) sleeptime = (int) delta;
-		else sleeptime = 999999;
+		if (delta > 0 && delta < 1000000)
+			sleeptime = (int) delta;
+		else
+			sleeptime = 999999;
 
-		String msg; inCount = outCount = 0;
+		String msg;
+		inCount = outCount = 0;
 		int idleCount = 0;
 		while (!quit) {
 			now = System.nanoTime() - t0;
 			if (rdt.incoming()) {
 				msg = rdt.receive();
 				if (!msg.equals("testing " + inCount)) {
-                                        System.out.println("got: " + msg
-						+ "when expecting "
-                                                + "testing " + inCount);
-                                        System.exit(1);
+					System.out.println("got: " + msg + "when expecting "
+							+ "testing " + inCount);
+					System.exit(1);
 				}
-                                inCount++;
+				inCount++;
 				idleCount = 0;
-			} else if (now > next && now < stopTime &&
-			     	   rdt.ready() && delta > 0) {
+			} else if (now > next && now < stopTime && rdt.ready() && delta > 0) {
 				// send an outgoing payload
 				msg = "testing " + outCount;
 				rdt.send(msg);
-				outCount++; next += delta;
+				outCount++;
+				next += delta;
 				idleCount = 0;
 			} else {
 				idleCount++;
 			}
 			if (idleCount >= 10) {
 				try {
-					Thread.sleep(0L,sleeptime);
-				} catch(Exception e) {
-					System.err.println("SrcSnk:run: "
-						+ "sleep exception " + e);
+					Thread.sleep(0L, sleeptime);
+				} catch (Exception e) {
+					System.err.println("SrcSnk:run: " + "sleep exception " + e);
 					System.exit(1);
 				}
 				idleCount = 0;
 			}
 		}
-		System.out.println("  SrcSnk: sent " + outCount
-					+ ", received " + inCount);
+		System.out.println("  SrcSnk: sent " + outCount + ", received "
+				+ inCount);
 		System.out.println("          runLength "
-					+ (((double) runLength)/1000000000));
+				+ (((double) runLength) / 1000000000));
 	}
 }
-
