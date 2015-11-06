@@ -1,0 +1,19 @@
+#! /bin/bash
+wSize=5
+timeout=.5
+dropProb=.2
+srvDelta=.2
+cliDelta=.1
+CWD=`pwd`
+source /users/onl/.topology
+echo "wSize=" $wSize " timeout=" $timeout " dropProb=" $dropProb 
+ssh $h7x1 "cd ${CWD}; java TestRdt h7x1 11313 ${wSize} ${timeout} \
+    ${dropProb} ${srvDelta} 20 >srvOut2 &"
+sleep 1
+ssh $h4x2 "cd ${CWD}; java TestRdt h4x2 0 ${wSize} ${timeout} \
+    ${dropProb} ${cliDelta} 20 h7x1 11313 >cliOut2"
+echo "************** client report ****************"
+cat cliOut2
+sleep 5
+echo "************** server report ****************"
+cat srvOut2
