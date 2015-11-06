@@ -1,0 +1,16 @@
+#! /bin/sh
+wSize=5
+timeout=.5
+dropProb=.25
+srvDelta=.05
+cliDelta=.03
+echo "wSize=" $wSize " timeout=" $timeout " dropProb=" $dropProb
+java TestRdt localhost 11313 ${wSize} ${timeout} debug \
+    ${dropProb} ${srvDelta} .3 >srvOut0 &
+java TestRdt localhost 0 ${wSize} ${timeout} debug \
+    ${dropProb} ${cliDelta} .3 localhost 11313 >cliOut0
+echo "************** client report ****************"
+cat cliOut0
+sleep 2
+echo "************** server report ****************"
+cat srvOut0
