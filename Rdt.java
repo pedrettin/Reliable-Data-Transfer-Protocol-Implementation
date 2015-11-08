@@ -129,30 +129,18 @@ public class Rdt implements Runnable {
         long now = 0; // current time (relative to t0)
         
         while (!quit || (numUnAckedPackets() > 0)) {
-            if (receiveBuffer[nextExpectedPacket] != null)
-                uploadOrderedPackets();
-            else if (sub.incoming())
-                processIncomingPacket();
-            
-            // Else if the resend timer has expired, re-send the oldest un-acked
-            // packet and reset timer
-            else if(!resendList.isEmpty()){
-                now = System.nanoTime() - t0;
-                short seqNum = resendList.peek();
-                long oldSendTime = resendTimes[seqNum]; //--Wont this trigger an out of Bounds error for the initial case?
-                long timePassed = now - oldSendTime;
-                
-                
-                if (timePassed > timeout) {
-                    short resentSeq = resendList.pop();
-                    sub.send(sendBuffer[resentSeq]);
-                    resendTimes[seqNum] = now;
-                    resendList.offer(resentSeq);//--We also have to re-add to the resendList but at the end.
-                }
-            }
-            else if (ready())
-                sendReadyPacket();
-            else
+        	//System.out.println("loop");
+        	now = System.nanoTime() - t0;
+        	if(uploadOrderedPackets()){	
+        		//System.out.println("uploadOrderedPackets called");
+        	}else if(processIncomingPackets()){
+        		//System.out.println("processIncomingPackets called");
+        	}else if(resendTimedoutPackets(now)){
+        		//System.out.println("resendTimedoutPackets called");
+        	}else if(sendReadyPacket(now)){
+        		//System.out.println("sendReadyPackets called");
+        	}else
+        		//System.out.println("sleep");
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException e) {
@@ -165,65 +153,84 @@ public class Rdt implements Runnable {
     
     /**
      * If receive buffer has a packet that can be delivered, deliver it to sink
+     * @return boolean true if anything is upload, false otherwise.
      */
-    private void uploadOrderedPackets() {
+    private boolean uploadOrderedPackets() {
         short index = nextExpectedPacket;
-        while (receiveBuffer[index] != null) {
-            
-            //What should be done if the maximum size of toSnk is reached?
-            if(!toSnk.offer(receiveBuffer[index]))
+        if(receiveBuffer[index] == null) return false;
+        while (receiveBuffer[index] != null){
+            if(!toSnk.offer(receiveBuffer[index])){
                 System.out.println("Maximum size of toSnk reached.");
+                return true;
+            }
             receiveBuffer[index] = null;
-            index = (short) (index++ % wSize);
+            index = (short) (++index % wSize);
         }
         nextExpectedPacket = index;
+        return true;
     }
     
     /**
      * If the substrate has an incoming packet get the packet from the substrate and process it
+     * @return boolean false if there is no incoming packet
      */
-    private void processIncomingPacket() {
+    private boolean processIncomingPackets() {
+    	if(!sub.incoming())
+    		return false;
         Packet rcvdPacket = sub.receive();
-        // if it's a data packet, ack it and add it
-        // to receive buffer as appropriate
         if (rcvdPacket.type == Packet.DATA_TYPE) {
             Packet ack = new Packet();
             ack.seqNum = rcvdPacket.seqNum;
             ack.type = Packet.DATA_TYPE+1;
             sub.send(ack);
-            receiveBuffer[rcvdPacket.seqNum % wSize] = rcvdPacket.payload; //--When exactly do we set this packet's payload?
+            receiveBuffer[rcvdPacket.seqNum % wSize] = rcvdPacket.payload;
         }
-        // if it's an ack, update the send buffer and
-        // related data as appropriate
-        // reset the timer if necessary
         else {
             sendBuffer[rcvdPacket.seqNum] = null;
-            resendTimes[rcvdPacket.seqNum] = -1; //--Do we set the resentTime to 0 or to infinity, or something else?
-            resendList.removeFirstOccurrence(rcvdPacket.seqNum); //-- If we do a simple remove, then well remove the element at the index of the seqNum and not the element with the actual seqNum.
+            resendList.removeFirstOccurrence(rcvdPacket.seqNum); 
         }
+        return true;
+    }
+    
+    /**
+     * Else if the resend timer has expired, re-send the oldest un-acked
+     * packet and reset timer
+     */
+    public boolean resendTimedoutPackets(long now){
+    	if(resendList.isEmpty()){
+    		return false;
+    	}
+    	short seqNum = resendList.peek();
+        long oldSendTime = resendTimes[seqNum]; 
+        long timePassed = now - oldSendTime;
+        if (timePassed > timeout) {
+            short resentSeq = resendList.pop();
+            sub.send(sendBuffer[resentSeq]);
+            resendTimes[seqNum] = now;
+            resendList.add(resentSeq);
+        }return true;
     }
     
     /**
      * if there is a message from the source waiting to be sent and the send window
-     * is not full and the substrate can accept a packet create a packet containing the message,
+     * is not full and the substrate can accept a packet, create a packet containing the message
      * and send it, after updating the send buffer and related data
      */
-    private void sendReadyPacket() {
-        if(!fromSrc.isEmpty()){ //-- Added a check to see if we have something to send at all.
-            if (numUnAckedPackets() < wSize) {
-                if (sub.ready()) {
-                    String message = fromSrc.poll();
-                    
-                    Packet out = new Packet();
-                    out.payload = message;
-                    out.seqNum = nextSequenceNumber;
-                    out.type = Packet.DATA_TYPE;
-                    sub.send(out);
-                    nextSequenceNumber = incr(nextSequenceNumber);
-                }
-            }
-        }
-    }
+    private boolean sendReadyPacket(long time) {
+    	if(fromSrc.isEmpty() || numUnAckedPackets() > wSize || !sub.ready())
+    		return false;
+        String message = fromSrc.poll();
+       	Packet out = new Packet();
+        out.payload = message;
+        out.seqNum = nextSequenceNumber;
+        out.type = Packet.DATA_TYPE;
+        sendBuffer[nextSequenceNumber] = out;
+        resendTimes[nextSequenceNumber] = time;
+        resendList.add(nextSequenceNumber);
+        sub.send(out);
+        nextSequenceNumber = incr(nextSequenceNumber);
+        return true;
+     }
     
     /**
      * count how many unacked packets we have
@@ -237,6 +244,9 @@ public class Rdt implements Runnable {
         }
         return numUnAckedPackets;
     }
+    
+    
+    
     
     /** Send a message to peer.
      *  @param message is a string to be sent to the peer
