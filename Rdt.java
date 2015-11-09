@@ -153,20 +153,24 @@ public class Rdt implements Runnable {
     
     /**
      * If receive buffer has a packet that can be delivered, deliver it to sink
-     * @return boolean true if anything is upload, false otherwise.
+     * @return boolean true if anything is uploaded, false otherwise.
      */
     private boolean uploadOrderedPackets() {
-        short index = nextExpectedPacket;
+        short index = (short) (nextExpectedPacket%wSize);
         if(receiveBuffer[index] == null) return false;
+        int counter =0;
         while (receiveBuffer[index] != null){
             if(!toSnk.offer(receiveBuffer[index])){
+            	nextExpectedPacket = index;
                 System.out.println("Maximum size of toSnk reached.");
                 return true;
             }
+            counter++;
+            //System.out.println("uploading sequence: "+receiveBuffer[index]);
             receiveBuffer[index] = null;
             index = (short) (++index % wSize);
         }
-        nextExpectedPacket = index;
+        nextExpectedPacket = (short) ((nextExpectedPacket + counter)%(2*wSize));
         return true;
     }
     
@@ -183,7 +187,13 @@ public class Rdt implements Runnable {
             ack.seqNum = rcvdPacket.seqNum;
             ack.type = Packet.DATA_TYPE+1;
             sub.send(ack);
-            receiveBuffer[rcvdPacket.seqNum % wSize] = rcvdPacket.payload;
+            //System.out.println("nextExpectedPacket: "+nextExpectedPacket);
+            //System.out.println("difference: "+diff(rcvdPacket.seqNum,nextExpectedPacket));
+            if(!(diff(rcvdPacket.seqNum,nextExpectedPacket)>wSize)){
+            	//System.out.println("Adding seqNum: "+rcvdPacket.seqNum);
+            	//System.out.println("Adding packet: "+rcvdPacket.payload);
+            	receiveBuffer[rcvdPacket.seqNum % wSize] = rcvdPacket.payload;
+            }
         }
         else {
             sendBuffer[rcvdPacket.seqNum] = null;
@@ -217,8 +227,18 @@ public class Rdt implements Runnable {
      * and send it, after updating the send buffer and related data
      */
     private boolean sendReadyPacket(long time) {
-    	if(fromSrc.isEmpty() || numUnAckedPackets() > wSize || !sub.ready())
+    	if(fromSrc.isEmpty() ||  !sub.ready())
     		return false;
+    	if(!resendList.isEmpty()){
+    		short lastUnAck = resendList.peek();
+        	int packetsInReceiverBuff= diff(nextSequenceNumber,lastUnAck);
+        	//System.out.println("lastUnAck: "+lastUnAck);
+			//System.out.println("nextExpectedPacket: "+nextExpectedPacket);
+			//System.out.println("pirb:"+packetsInReceiverBuff);
+        	if(packetsInReceiverBuff >= wSize-1){
+    			return false;
+    		}
+    	}
         String message = fromSrc.poll();
        	Packet out = new Packet();
         out.payload = message;

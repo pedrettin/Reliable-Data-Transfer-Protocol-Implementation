@@ -88,6 +88,7 @@ public class SrcSnk implements Runnable {
 			now = System.nanoTime() - t0;
 			if (rdt.incoming()) {
 				msg = rdt.receive();
+				System.out.println("srcsnk receiving sequence: "+msg);
 				if (!msg.equals("testing " + inCount)) {
 					System.out.println("got: " + msg + "when expecting "
 							+ "testing " + inCount);

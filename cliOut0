@@ -1,46 +1,51 @@
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[0] testing 0
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[0]
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[1] testing 1
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[1]
+discarding data[0] testing 0
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[0] testing 0
+discarding data[0] testing 0
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[0] testing 0
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[0]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[1] testing 1
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[1]
 discarding data[2] testing 2
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[2] testing 2
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[2]
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[3] testing 3
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[3]
-discarding data[4] testing 4
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[4] testing 4
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[4] testing 4
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[4]
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[5] testing 5
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[5]
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[0] testing 0
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 ack[0]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[2] testing 2
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[2]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[3] testing 3
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[3]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[4] testing 4
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[1] testing 1
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 ack[1]
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[2] testing 2
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 ack[2]
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[3] testing 3
+discarding ack[3]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[4] testing 4
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[4]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[5] testing 5
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[5]
 discarding data[6] testing 6
-/127.0.0.1:47034 received from /127.0.0.1:11313 data[0] testing 0
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 ack[0]
-/127.0.0.1:47034 received from /127.0.0.1:11313 data[1] testing 1
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 ack[1]
-/127.0.0.1:47034 received from /127.0.0.1:11313 data[2] testing 2
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 ack[2]
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[6] testing 6
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[6]
-discarding data[7] testing 7
-/127.0.0.1:47034 received from /127.0.0.1:11313 data[3] testing 3
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 ack[3]
-/127.0.0.1:47034 received from /127.0.0.1:11313 data[4] testing 4
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 ack[4]
-/127.0.0.1:47034 received from /127.0.0.1:11313 data[5] testing 5
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 ack[5]
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[7] testing 7
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[7]
-discarding data[8] testing 8
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[8] testing 8
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[8]
-/127.0.0.1:47034 sending to localhost/127.0.0.1:11313 data[9] testing 9
-/127.0.0.1:47034 received from /127.0.0.1:11313 ack[9]
-  Sender: sent 16 data packets, 6 acks
-          discarded 5 data packets, 0 acks
-          runLength 3.112069493
-Receiver: received 6 data packets, 10 acks
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[3] testing 3
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 ack[3]
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[4] testing 4
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 ack[4]
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[5] testing 5
+discarding ack[5]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[6] testing 6
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[6] testing 6
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[6]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[7] testing 7
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[7]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[8] testing 8
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[8]
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 data[9] testing 9
+/127.0.0.1:55167 received from /127.0.0.1:11313 ack[9]
+/127.0.0.1:55167 received from /127.0.0.1:11313 data[5] testing 5
+/127.0.0.1:55167 sending to localhost/127.0.0.1:11313 ack[5]
+  Sender: sent 17 data packets, 8 acks
+          discarded 4 data packets, 2 acks
+          runLength 3.616261848
+Receiver: received 8 data packets, 10 acks
           discarded 0 arrivals 
-          runLength 3.110321901
+          runLength 2.113092835
   SrcSnk: sent 10, received 6
           runLength 0.3
